@@ -1,0 +1,54 @@
+name: notify
+
+on:
+  schedule:
+    # 約5分ごと（GitHub の混雑状況によって数分〜十数分遅れることがある）
+    - cron: '2-59/5 * * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: notify
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            server
+            js
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install
+        working-directory: server
+        run: npm install --omit=dev --no-audit --no-fund --loglevel=error
+
+      - name: Send notifications
+        working-directory: server
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
+        run: node notify.mjs
+
+      # 公開リポジトリは60日間更新がないと定期実行が止まるので、1日1回「有効化」して止まらないようにする
+      - name: Keep schedule alive
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$(date -u +%H%M)" \< "0030" ]; then
+            gh api -X PUT "repos/${{ github.repository }}/actions/workflows/notify.yml/enable" || true
+          fi

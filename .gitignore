@@ -1,0 +1,5 @@
+# Firebase の秘密鍵（サービスアカウント）は絶対にアップロードしない
+*firebase-adminsdk*.json
+*service-account*.json
+server/node_modules/
+schedule-backup-*.json

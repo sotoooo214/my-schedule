@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>通知用の鍵（VAPID）を作る</title>
+<style>
+  :root{--bg:#fff;--text:#1b1d24;--muted:#5d6270;--border:#cfd3de;--accent:#4f5bd5}
+  @media (prefers-color-scheme:dark){:root{--bg:#1c1d22;--text:#eceef3;--muted:#a7acb9;--border:#454955;--accent:#8a93ff}}
+  body{font-family:-apple-system,"Segoe UI","Yu Gothic UI",Meiryo,sans-serif;background:var(--bg);color:var(--text);max-width:720px;margin:0 auto;padding:24px 16px;line-height:1.7}
+  h1{font-size:20px}
+  button{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:15px;cursor:pointer}
+  label{display:block;margin-top:18px;font-weight:600}
+  textarea{width:100%;box-sizing:border-box;font-family:Consolas,monospace;font-size:13px;padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);resize:vertical}
+  .note{color:var(--muted);font-size:14px}
+  .warn{color:#d93838;font-size:14px}
+</style>
+</head>
+<body>
+<h1>通知用の鍵（VAPID）を作る</h1>
+<p class="note">このページはこのPCの中だけで鍵を作ります（どこにも送信しません）。作るのは最初の1回だけです。</p>
+<button id="gen">鍵を作る</button>
+
+<label for="pub">公開鍵（VAPID_PUBLIC_KEY）</label>
+<p class="note">→ <code>js/config.js</code> の <code>VAPID_PUBLIC_KEY</code> と、GitHub の Secrets の <code>VAPID_PUBLIC_KEY</code> の両方に貼りつける</p>
+<textarea id="pub" rows="3" readonly></textarea>
+
+<label for="priv">秘密鍵（VAPID_PRIVATE_KEY）</label>
+<p class="warn">→ GitHub の Secrets の <code>VAPID_PRIVATE_KEY</code> にだけ貼りつける。ファイルに保存したり人に見せたりしないこと。</p>
+<textarea id="priv" rows="2" readonly></textarea>
+
+<script>
+const b64url = bytes => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+document.getElementById('gen').onclick = async () => {
+  if (!crypto.subtle) { alert('このブラウザでは鍵を作れません。Chrome か Edge で開いてください。'); return; }
+  const kp = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
+  const pub = new Uint8Array(await crypto.subtle.exportKey('raw', kp.publicKey));
+  const jwk = await crypto.subtle.exportKey('jwk', kp.privateKey);
+  document.getElementById('pub').value = b64url(pub);
+  document.getElementById('priv').value = jwk.d;
+};
+</script>
+</body>
+</html>

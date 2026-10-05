@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#4f5bd5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="スケジュール">
+<title>マイスケジュール</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="loading" class="loading">読み込み中…</div>
+
+<!-- ログイン -->
+<section id="login" class="login" hidden>
+  <form id="loginForm" class="login-card">
+    <h1>マイスケジュール</h1>
+    <p class="muted" id="loginLead">ログインしてください</p>
+    <label>メールアドレス<input type="email" id="loginEmail" autocomplete="username" required></label>
+    <label>パスワード<input type="password" id="loginPw" autocomplete="current-password" minlength="6" required></label>
+    <p class="error" id="loginError" hidden></p>
+    <button type="submit" class="primary wide" id="loginSubmit">ログイン</button>
+    <div class="login-links">
+      <button type="button" class="link" id="toggleSignup">はじめて使う（アカウント作成）</button>
+      <button type="button" class="link" id="resetPw">パスワードを忘れた</button>
+    </div>
+  </form>
+</section>
+
+<!-- メイン -->
+<div id="app" class="app" hidden>
+  <header class="topbar">
+    <div class="nav">
+      <button class="icon-btn" id="prevBtn" aria-label="前の月">‹</button>
+      <h1 id="monthLabel"></h1>
+      <button class="icon-btn" id="nextBtn" aria-label="次の月">›</button>
+      <button class="ghost" id="todayBtn">今日</button>
+    </div>
+    <div class="actions">
+      <span class="status" id="netStatus" hidden>オフライン</span>
+      <button class="primary" id="addBtn">＋<span class="hide-sm"> 予定を追加</span></button>
+      <button class="icon-btn" id="settingsBtn" aria-label="設定">⚙</button>
+    </div>
+  </header>
+  <div class="banner" id="banner" hidden></div>
+  <main class="layout">
+    <section class="calendar" id="calendar">
+      <div class="dow" id="dow"></div>
+      <div class="grid" id="grid"></div>
+    </section>
+    <aside class="daypanel" id="dayPanel"></aside>
+  </main>
+</div>
+
+<!-- 予定の追加・編集 -->
+<dialog id="eventDialog" class="sheet">
+  <form id="eventForm" method="dialog" novalidate>
+    <div class="sheet-head">
+      <button type="button" class="ghost" data-close>キャンセル</button>
+      <h2 id="eventDialogTitle">予定を追加</h2>
+      <button type="submit" class="primary">保存</button>
+    </div>
+    <div class="sheet-body">
+      <input type="text" id="fTitle" class="title-input" placeholder="タイトル" autocomplete="off">
+
+      <div class="row">
+        <label class="lbl" for="fCategory">種類</label>
+        <select id="fCategory"></select>
+      </div>
+
+      <div class="row">
+        <span class="lbl">終日</span>
+        <label class="switch"><input type="checkbox" id="fAllDay"><span></span></label>
+      </div>
+      <div class="row">
+        <span class="lbl">開始</span>
+        <div class="dt"><input type="date" id="fStartDate" required><input type="time" id="fStartTime" class="timeonly"></div>
+      </div>
+      <div class="row">
+        <span class="lbl">終了</span>
+        <div class="dt"><input type="date" id="fEndDate" required><input type="time" id="fEndTime" class="timeonly"></div>
+      </div>
+
+      <div class="row">
+        <label class="lbl" for="fRecFreq">繰り返し</label>
+        <select id="fRecFreq">
+          <option value="none">しない</option>
+          <option value="daily">毎日</option>
+          <option value="weekly">毎週</option>
+          <option value="monthly">毎月</option>
+          <option value="yearly">毎年</option>
+        </select>
+      </div>
+      <div class="rec-detail" id="recDetail" hidden>
+        <div class="row">
+          <span class="lbl">間隔</span>
+          <div class="inline"><input type="number" id="fRecInterval" min="1" max="99" value="1"><span id="recUnit">日ごと</span></div>
+        </div>
+        <div class="row" id="recDaysRow">
+          <span class="lbl">曜日</span>
+          <div class="weekdays" id="recDays"></div>
+        </div>
+        <div class="row">
+          <label class="lbl" for="fRecUntil">終了日</label>
+          <div class="inline"><input type="date" id="fRecUntil"><button type="button" class="link" id="clearUntil">なし</button></div>
+        </div>
+      </div>
+
+      <div class="row top">
+        <span class="lbl">通知</span>
+        <div class="reminders">
+          <div class="chips" id="remChips"></div>
+          <select id="remAdd"></select>
+          <div class="rem-custom" id="remCustom" hidden></div>
+        </div>
+      </div>
+
+      <div class="row top">
+        <label class="lbl" for="fNote">備考</label>
+        <textarea id="fNote" rows="4" placeholder="メモ・場所・持ち物など"></textarea>
+      </div>
+
+      <button type="button" class="danger wide" id="deleteBtn" hidden>この予定を削除</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- 繰り返し予定の変更範囲 -->
+<dialog id="scopeDialog" class="small">
+  <h3 id="scopeTitle">繰り返しの予定です</h3>
+  <div class="stack">
+    <button class="ghost wide" data-scope="one">この予定のみ</button>
+    <button class="ghost wide" data-scope="future">これ以降のすべての予定</button>
+    <button class="ghost wide" data-scope="all">すべての予定</button>
+    <button class="link wide" data-scope="">キャンセル</button>
+  </div>
+</dialog>
+
+<!-- 設定 -->
+<dialog id="settingsDialog" class="sheet">
+  <div class="sheet-head">
+    <span></span>
+    <h2>設定</h2>
+    <button type="button" class="primary" data-close>閉じる</button>
+  </div>
+  <div class="sheet-body" id="settingsBody"></div>
+</dialog>
+
+<div class="toast" id="toast" hidden></div>
+
+<datalist id="palette">
+  <option>#1a73e8</option><option>#0b8043</option><option>#e67c00</option><option>#d50000</option>
+  <option>#8e24aa</option><option>#e91e63</option><option>#039be5</option><option>#7cb342</option>
+  <option>#f4511e</option><option>#616161</option>
+</datalist>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

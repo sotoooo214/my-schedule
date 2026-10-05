@@ -1,0 +1,12 @@
+{
+  "name": "my-schedule-notifier",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "notify": "node notify.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "web-push": "^3.6.7"
+  }
+}
