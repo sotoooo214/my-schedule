@@ -2,17 +2,14 @@
 
 // Firebase の設定。null のままだと「ローカルモード」（この端末だけに保存・同期なし）で動く。
 // Firebaseコンソールの「プロジェクトの設定 → マイアプリ」に表示される firebaseConfig を貼りつける。
-export const firebaseConfig = null;
-/* 例:
 export const firebaseConfig = {
-  apiKey: "AIza....",
-  authDomain: "my-schedule-xxxx.firebaseapp.com",
-  projectId: "my-schedule-xxxx",
-  storageBucket: "my-schedule-xxxx.appspot.com",
-  messagingSenderId: "1234567890",
-  appId: "1:1234567890:web:abcdef",
+  apiKey: "AIzaSyARF46Xn124WnsOjRLHG7XIpa4O3vgjUFA",
+  authDomain: "my-schedule-cb7ad.firebaseapp.com",
+  projectId: "my-schedule-cb7ad",
+  storageBucket: "my-schedule-cb7ad.firebasestorage.app",
+  messagingSenderId: "289422525072",
+  appId: "1:289422525072:web:3e04f1b7c557bcb4554e15",
 };
-*/
 
 // 通知用の公開鍵（tools/vapid-keygen.html で作った「公開鍵」）。空のままだと通知はオンにできない。
-export const VAPID_PUBLIC_KEY = '';
+export const VAPID_PUBLIC_KEY = 'BOUqYBaUDdxrH1U2DONMGo2IJVLONm5-pvSDo0_fIGBfd6qEznv3oYj1k8kqxGKuKKQZrr2f7aNSfooRpjRiZiQ';
