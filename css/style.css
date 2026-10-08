@@ -1,22 +1,26 @@
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#ffffff;--bg2:#f6f7fb;--bg3:#eceef5;
-  --text:#1b1d24;--text2:#5d6270;--text3:#9a9fad;
-  --border:#e1e4ec;--border2:#cfd3de;
-  --accent:#4f5bd5;--accent-soft:#e9ebfc;--on-accent:#fff;
-  --sun:#d93838;--sat:#2f6fd6;--danger:#d93838;
-  --today:#4f5bd5;--selected:#f1f2fd;
-  --radius:10px;--shadow:0 8px 30px rgba(20,24,40,.18);
+  /* 生成り・ベージュの地に、くすんだ緑と茶色 */
+  --bg:#fbf8f1;--bg2:#f3eee3;--bg3:#ebe4d6;
+  --text:#3d342b;--text2:#6e6255;--text3:#a39785;
+  --border:#e2d9c8;--border2:#d2c6b0;
+  --accent:#5b7f4e;--accent-soft:#e6ecdc;--on-accent:#fdfbf6;
+  --sun:#b5583e;--sat:#4d7389;--danger:#b5583e;
+  --today:#5b7f4e;--selected:#eef1e4;
+  --toast:#3d342b;--backdrop:rgba(45,35,25,.4);
+  --radius:10px;--shadow:0 8px 30px rgba(60,45,30,.18);
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --bg:#1c1d22;--bg2:#24262d;--bg3:#141518;
-    --text:#eceef3;--text2:#a7acb9;--text3:#6f7482;
-    --border:#33363f;--border2:#454955;
-    --accent:#8a93ff;--accent-soft:#2b2f52;--on-accent:#10122a;
-    --sun:#ff7b7b;--sat:#7fb0ff;--danger:#ff7b7b;
-    --today:#8a93ff;--selected:#262940;
+    /* こげ茶の地に、やわらかい若草色 */
+    --bg:#2a2520;--bg2:#322c26;--bg3:#211d19;
+    --text:#e9e1d3;--text2:#b8ab98;--text3:#7d7262;
+    --border:#3d362e;--border2:#4e463b;
+    --accent:#9cbf86;--accent-soft:#36402c;--on-accent:#1f2318;
+    --sun:#e0947b;--sat:#93b4c8;--danger:#e0947b;
+    --today:#9cbf86;--selected:#353a2b;
+    --toast:#4e463b;--backdrop:rgba(0,0,0,.5);
     --shadow:0 8px 30px rgba(0,0,0,.5);
     color-scheme:dark;
   }
@@ -98,7 +102,7 @@ button{cursor:pointer;border:none;background:none}
 
 /* ダイアログ */
 dialog{border:none;background:var(--bg);color:var(--text);box-shadow:var(--shadow);padding:0}
-dialog::backdrop{background:rgba(10,12,20,.45)}
+dialog::backdrop{background:var(--backdrop)}
 dialog.sheet{width:min(560px,calc(100vw - 24px));max-height:calc(100dvh - 40px);border-radius:14px;margin:auto}
 dialog.sheet[open]{display:flex;flex-direction:column}
 dialog.sheet > form{display:flex;flex-direction:column;min-height:0;max-height:inherit}
@@ -159,7 +163,12 @@ dialog.small h3{font-size:16px;margin-bottom:12px;text-align:center}
 .set-sec .lbl{width:auto}
 
 /* トースト */
-.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#22252e;color:#fff;padding:10px 16px;border-radius:99px;font-size:14px;z-index:100;box-shadow:var(--shadow);max-width:calc(100vw - 32px)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--toast);color:#fbf8f1;padding:10px 16px;border-radius:99px;font-size:14px;z-index:100;box-shadow:var(--shadow);max-width:calc(100vw - 32px)}
+
+/* ダークモードでは、種類の文字色を少し明るくして読みやすくする */
+@media (prefers-color-scheme:dark){
+  .it,.dp-title{color:color-mix(in srgb,var(--c) 55%,#f3ece0)}
+}
 
 /* スマホ */
 @media (max-width:820px){

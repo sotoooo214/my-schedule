@@ -5,12 +5,12 @@ import { createFirebaseStore, createLocalStore } from './store.js';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-const DEFAULT_COLOR = '#5d6270';
+const DEFAULT_COLOR = '#6e6255';
 const DEFAULT_CATEGORIES = [
-  { name: '予定', color: '#1a73e8', order: 0 },
-  { name: '授業', color: '#0b8043', order: 1 },
-  { name: 'バイト', color: '#e67c00', order: 2 },
-  { name: 'プライベート', color: '#e91e63', order: 3 },
+  { name: '予定', color: '#3f7a5a', order: 0 },
+  { name: '授業', color: '#4d6f8c', order: 1 },
+  { name: 'バイト', color: '#b0683a', order: 2 },
+  { name: 'プライベート', color: '#a0526b', order: 3 },
 ];
 const TIMED_PRESETS = [0, 5, 10, 15, 30, 60, 120, 1440, 2880, 10080];
 const ALLDAY_PRESETS = [-540, 900, 180, 2340, 9540]; // 当日9:00, 前日9:00, 前日21:00, 2日前9:00, 1週間前9:00
@@ -664,7 +664,7 @@ function renderSettings() {
 
   renderCatList();
   $('#addCat').onclick = () => {
-    S.store.saveCategory({ name: '新しい種類', color: '#1a73e8', order: (S.cats.at(-1)?.order ?? 0) + 1 }, onSaveError);
+    S.store.saveCategory({ name: '新しい種類', color: '#3f7a5a', order: (S.cats.at(-1)?.order ?? 0) + 1 }, onSaveError);
   };
 
   $('#weekStartSel').value = String(S.settings.weekStart || 0);
