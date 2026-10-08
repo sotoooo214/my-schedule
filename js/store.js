@@ -94,6 +94,14 @@ export async function createFirebaseStore(config) {
     },
     deleteCategory(id, onError) { fire(fs.deleteDoc(userDoc('categories', id)), onError); },
     saveSettings(partial, onError) { fire(fs.setDoc(userDoc('meta', 'settings'), partial, { merge: true }), onError); },
+    // 任意のコレクションを監視・保存する（就活管理アプリなどから使う）
+    watch(col, cb, onError) {
+      unsubs.push(fs.onSnapshot(userCol(col), { includeMetadataChanges: true },
+        s => cb(s.docs.map(d => ({ id: d.id, ...d.data() })), s.metadata.fromCache), onError));
+    },
+    put(col, id, data, onError) { fire(fs.setDoc(userDoc(col, id), data), onError); },
+    remove(col, id, onError) { fire(fs.deleteDoc(userDoc(col, id)), onError); },
+
     async savePushSub(subJson) {
       const id = await sha256Hex(subJson.endpoint);
       await fs.setDoc(userDoc('pushSubs', id), {

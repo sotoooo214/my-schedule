@@ -115,6 +115,9 @@ dialog.small h3{font-size:16px;margin-bottom:12px;text-align:center}
 .stack{display:flex;flex-direction:column;gap:8px}
 
 /* フォーム */
+.src-note{font-size:13px;line-height:1.6;background:var(--accent-soft);border-radius:8px;padding:9px 12px}
+.src-note a{color:var(--accent);font-weight:600}
+#eventForm :disabled{opacity:.6}
 .title-input{font-size:18px;font-weight:600;padding:10px 12px;border:1px solid var(--border2);border-radius:8px;background:var(--bg);width:100%}
 .row{display:flex;align-items:center;gap:12px;min-height:38px}
 .row.top{align-items:flex-start}

@@ -488,6 +488,10 @@ function fillForm(v) {
   F.reminders = (v.reminders || []).map(x => x.min);
   applyAllDayUI();
   applyRecUI();
+  // 就活管理から追加された予定は、タイトル・日時・繰り返しを就活管理側で管理する
+  const linked = v.source === 'shukatsu';
+  $('#srcNote').hidden = !linked;
+  ['#fTitle', '#fAllDay', '#fStartDate', '#fStartTime', '#fEndDate', '#fEndTime', '#fRecFreq'].forEach(s => { $(s).disabled = linked; });
 }
 
 function openNew(dateKey) {
@@ -511,7 +515,7 @@ function openEditById(id, key) {
   F.ev = ev; F.key = occ.key;
   fillForm({ ...ev, startDate: occ.startDate, endDate: occ.endDate, startTime: ev.startTime, endTime: ev.allDay ? ev.endTime : occ.endTime });
   $('#eventDialogTitle').textContent = '予定を編集';
-  $('#deleteBtn').hidden = false;
+  $('#deleteBtn').hidden = ev.source === 'shukatsu';
   $('#eventDialog').showModal();
 }
 
@@ -570,6 +574,12 @@ async function saveForm() {
   if (f.categoryId && f.categoryId !== S.settings.lastCategoryId) S.store.saveSettings({ lastCategoryId: f.categoryId }, onSaveError);
 
   const ev = F.ev;
+  if (ev && ev.source === 'shukatsu') {
+    save({ ...ev, categoryId: f.categoryId, reminders: f.reminders, note: f.note });
+    $('#eventDialog').close();
+    toast('保存しました');
+    return;
+  }
   if (!ev) {
     save({ ...f, exdates: [] });
     $('#eventDialog').close();
@@ -645,6 +655,11 @@ function renderSettings() {
       <div id="catList" class="stack"></div>
       <div class="btn-row"><button class="ghost" id="addCat">＋ 種類を追加</button></div>
     </section>
+    ${local ? '' : `<section class="set-sec">
+      <h3>就活管理</h3>
+      <p class="muted">就活管理で入れた締め切りは、種類「就活」の予定として自動で追加されます。</p>
+      <div class="btn-row"><a class="ghost" href="shukatsu/" style="text-decoration:none">就活管理を開く</a></div>
+    </section>`}
     <section class="set-sec">
       <h3>表示</h3>
       <div class="row"><span class="lbl">週の始まり</span>

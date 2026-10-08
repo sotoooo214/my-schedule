@@ -1,12 +1,13 @@
 // sw.js — オフライン表示と通知の受信
 // アプリのファイルは「通信できればいつも最新を取得、オフラインなら保存済みを使う」ので、
 // アップデートしてもこのファイルを書きかえる必要は基本的にない。
-const CACHE = 'my-schedule-v1';
+const CACHE = 'my-schedule-v2';
 const SDK_HOST = 'www.gstatic.com';
 const ASSETS = [
   './', './index.html', './css/style.css', './manifest.json',
   './js/app.js', './js/core.js', './js/store.js', './js/config.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png',
+  './shukatsu/', './shukatsu/index.html', './shukatsu/shukatsu.js', './shukatsu/manifest.json', './shukatsu/icon-192.png',
 ];
 
 self.addEventListener('install', e => {
