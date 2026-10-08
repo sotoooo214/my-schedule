@@ -7,7 +7,7 @@ const ASSETS = [
   './', './index.html', './css/style.css', './manifest.json',
   './js/app.js', './js/core.js', './js/store.js', './js/config.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png',
-  './shukatsu/', './shukatsu/index.html', './shukatsu/shukatsu.js', './shukatsu/manifest.json', './shukatsu/icon-192.png',
+  './shukatsu/', './shukatsu/index.html', './shukatsu/shukatsu.js', './shukatsu/manifest.json', './shukatsu/icon-192.png', './shukatsu/apple-touch-icon.png',
 ];
 
 self.addEventListener('install', e => {
