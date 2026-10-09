@@ -1,6 +1,7 @@
 import { firebaseConfig, VAPID_PUBLIC_KEY } from './config.js';
 import * as C from './core.js';
 import { createFirebaseStore, createLocalStore } from './store.js';
+import { buildAgenda, agendaKey, newAgendaToken } from './agenda.js';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -82,6 +83,19 @@ function onEvents(list) {
   }
   S.events = out;
   render();
+  updateAgenda();
+}
+
+// ショートカット用「今日・明日の予定」を、内容が変わったときだけ保存する
+let lastAgenda = '';
+function updateAgenda() {
+  const token = S.settings.agendaToken;
+  if (!token || S.store.mode === 'local') return;
+  const a = buildAgenda(S.events);
+  const key = `${token}\n${agendaKey(a)}`;
+  if (key === lastAgenda) return;
+  lastAgenda = key;
+  S.store.putAgenda(token, a, onSaveError);
 }
 
 function onCategories(list) {
@@ -99,6 +113,8 @@ function onSettings(st, fromCache) {
     if (!S.cats.length) DEFAULT_CATEGORIES.forEach(c => S.store.saveCategory(c, onSaveError));
   }
   render();
+  updateAgenda();
+  if ($('#settingsDialog').open) renderShortcutArea();
 }
 
 function onSaveError(e) {
@@ -283,7 +299,7 @@ function bindUI() {
   // 日付が変わったら「今日」の表示を更新
   let lastToday = C.todayKey();
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && C.todayKey() !== lastToday) { lastToday = C.todayKey(); render(); }
+    if (document.visibilityState === 'visible' && C.todayKey() !== lastToday) { lastToday = C.todayKey(); render(); updateAgenda(); }
   });
 
   const updateNet = () => { $('#netStatus').hidden = navigator.onLine || S.store.mode === 'local'; };
@@ -659,6 +675,10 @@ function renderSettings() {
       <h3>就活管理</h3>
       <p class="muted">就活管理で入れた締め切りは、種類「就活」の予定として自動で追加されます。</p>
       <div class="btn-row"><a class="ghost" href="shukatsu/" style="text-decoration:none">就活管理を開く</a></div>
+    </section>
+    <section class="set-sec">
+      <h3>iPhoneのショートカット</h3>
+      <div id="shortcutArea" class="stack"></div>
     </section>`}
     <section class="set-sec">
       <h3>表示</h3>
@@ -690,6 +710,45 @@ function renderSettings() {
   $('#importFile').onchange = importData;
 
   renderPushArea();
+  renderShortcutArea();
+}
+
+function agendaUrl(token) {
+  return `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/agendas/${token}`;
+}
+
+function renderShortcutArea() {
+  const area = $('#shortcutArea');
+  if (!area) return;
+  const token = S.settings.agendaToken;
+  if (!token) {
+    area.innerHTML = `<p class="muted">iPhoneの「ショートカット」アプリで、今日・明日の予定を読み上げたり表示したりできるようにします。専用のURLを作ってショートカットに登録します。</p>
+      <div class="btn-row"><button class="primary" id="makeAgenda">ショートカット用のURLを作る</button></div>`;
+    $('#makeAgenda').onclick = () => { S.store.saveSettings({ agendaToken: newAgendaToken() }, onSaveError); };
+    return;
+  }
+  const a = buildAgenda(S.events);
+  area.innerHTML = `<p>このURLをショートカットの「URLの内容を取得」に登録してください（作り方は「セットアップ手順.md」）。</p>
+    <input type="text" id="agendaUrl" readonly value="${esc(agendaUrl(token))}" style="width:100%;font-size:13px">
+    <div class="btn-row"><button class="primary" id="copyAgenda">URLをコピー</button></div>
+    <p class="muted">ショートカットで受け取れる文章（今日の分）：</p>
+    <p style="white-space:pre-wrap;background:var(--bg2);border-radius:8px;padding:8px 10px">${esc(a.todayText)}</p>
+    <p class="muted">URLは他人に教えないでください。漏れたかもしれないときは「作り直す」で古いURLを使えなくできます（ショートカットのURLも入れ直しが必要です）。</p>
+    <div class="btn-row"><button class="ghost" id="renewAgenda">URLを作り直す</button><button class="ghost" id="stopAgenda">使うのをやめる</button></div>`;
+  $('#copyAgenda').onclick = async () => {
+    try { await navigator.clipboard.writeText(agendaUrl(token)); toast('コピーしました'); }
+    catch { $('#agendaUrl').select(); toast('選択した文字をコピーしてください'); }
+  };
+  $('#renewAgenda').onclick = () => {
+    if (!confirm('URLを作り直しますか？\n今のURLは使えなくなります。')) return;
+    S.store.deleteAgenda(token, onSaveError);
+    S.store.saveSettings({ agendaToken: newAgendaToken() }, onSaveError);
+  };
+  $('#stopAgenda').onclick = () => {
+    if (!confirm('ショートカット用のURLを使えなくしますか？')) return;
+    S.store.deleteAgenda(token, onSaveError);
+    S.store.saveSettings({ agendaToken: null }, onSaveError);
+  };
 }
 
 function renderCatList() {

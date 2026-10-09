@@ -4,6 +4,7 @@
 import { firebaseConfig } from '../js/config.js';
 import * as C from '../js/core.js';
 import { createFirebaseStore, newId } from '../js/store.js';
+import { buildAgenda, agendaKey } from '../js/agenda.js';
 
 const COL = 'shukatsuCompanies';
 const LEGACY_KEY = 'shukatsu-v1';          // 以前の版がこのブラウザに保存していたデータ
@@ -67,6 +68,7 @@ async function init() {
     store.watch(COL, onCompanies, onError);
     store.watch('events', onEvents, onError);
     store.watch('categories', onCategories, onError);
+    store.watch('meta', onMeta, onError);
     render();
   });
 
@@ -90,8 +92,28 @@ function onCompanies(list, fromCache) {
 function onEvents(list, fromCache) {
   events.clear();
   for (const ev of list) if (ev.source === 'shukatsu') events.set(ev.id, ev);
+  allEvents = list.filter(ev => ev.startDate).map(C.migrateEvent);
   if (!fromCache) ready.events = true;
   afterLoad();
+  updateAgenda();
+}
+
+// ショートカット用「今日・明日の予定」も、就活の締め切りを変えたらすぐ更新する
+let allEvents = [];
+let agendaToken = null;
+let lastAgenda = '';
+function onMeta(list) {
+  const st = list.find(d => d.id === 'settings');
+  agendaToken = (st && st.agendaToken) || null;
+  updateAgenda();
+}
+function updateAgenda() {
+  if (!agendaToken || !ready.events) return;
+  const a = buildAgenda(allEvents);
+  const key = `${agendaToken}\n${agendaKey(a)}`;
+  if (key === lastAgenda) return;
+  lastAgenda = key;
+  store.putAgenda(agendaToken, a, onError);
 }
 function onCategories(list, fromCache) {
   catIds.clear();

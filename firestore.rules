@@ -1,10 +1,19 @@
 rules_version = '2';
-// Firestore のセキュリティルール：ログインした本人だけが自分のデータを読み書きできる
+// Firestore のセキュリティルール
 // （Firebaseコンソール → Firestore Database → ルール に貼りつけて「公開」）
 service cloud.firestore {
   match /databases/{database}/documents {
+    // ログインした本人だけが自分のデータを読み書きできる
     match /users/{uid}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    // ショートカット用の「今日の予定」：URL（長い乱数）を知っていれば1件だけ読める。一覧は不可。書けるのは本人だけ
+    match /agendas/{token} {
+      allow get: if true;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update: if request.auth != null && resource.data.uid == request.auth.uid
+                    && request.resource.data.uid == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
     }
   }
 }

@@ -2,7 +2,8 @@
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import webpush from 'web-push';
-import { migrateEvent, firesBetween, nextFire, formatOccRange, relativeLabel } from '../js/core.js';
+import { migrateEvent, firesBetween, nextFire, formatOccRange, relativeLabel, todayKey } from '../js/core.js';
+import { buildAgenda } from '../js/agenda.js';
 
 const EARLY_MS = 150 * 1000;        // 実行間隔のずれを考えて、最大2.5分早めに送る
 const STALE_MS = 6 * 3600 * 1000;   // 6時間以上遅れてしまった通知は送らない
@@ -21,7 +22,23 @@ const horizon = now + EARLY_MS;
 let sent = 0, failed = 0, checked = 0;
 
 const users = await db.collection('users').listDocuments();
+// ショートカット用「今日・明日の予定」を、日付が変わっていたら作り直す
+async function refreshAgenda(userRef) {
+  const settings = await userRef.collection('meta').doc('settings').get();
+  const token = settings.exists ? settings.get('agendaToken') : null;
+  if (!token) return;
+  const ref = db.collection('agendas').doc(token);
+  const cur = await ref.get();
+  if (cur.exists && cur.get('date') === todayKey(now)) return;
+  const evs = (await userRef.collection('events').get()).docs
+    .map(d => ({ id: d.id, ...d.data() })).filter(e => e.startDate).map(migrateEvent);
+  await ref.set({ ...buildAgenda(evs, now), uid: userRef.id, updatedAt: now });
+  console.log('今日の予定（ショートカット用）を更新');
+}
+
 for (const userRef of users) {
+  try { await refreshAgenda(userRef); } catch (e) { console.error('今日の予定の更新に失敗:', e.message); }
+
   const due = await userRef.collection('events').where('nextNotifyAt', '<=', horizon).get();
   if (due.empty) continue;
 

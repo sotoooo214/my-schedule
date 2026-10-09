@@ -102,6 +102,13 @@ export async function createFirebaseStore(config) {
     put(col, id, data, onError) { fire(fs.setDoc(userDoc(col, id), data), onError); },
     remove(col, id, onError) { fire(fs.deleteDoc(userDoc(col, id)), onError); },
 
+    // ショートカット用「今日の予定」（agendas/{token}。URLを知っていれば読める・本人だけ書ける）
+    putAgenda(token, agenda, onError) {
+      fire(fs.setDoc(fs.doc(db, 'agendas', token), { ...agenda, uid, updatedAt: Date.now() }), onError);
+    },
+    deleteAgenda(token, onError) { fire(fs.deleteDoc(fs.doc(db, 'agendas', token)), onError); },
+    projectId: config.projectId,
+
     async savePushSub(subJson) {
       const id = await sha256Hex(subJson.endpoint);
       await fs.setDoc(userDoc('pushSubs', id), {
@@ -145,6 +152,8 @@ export function createLocalStore() {
     },
     deleteCategory(id) { delete state.categories[id]; persist(); },
     saveSettings(partial) { Object.assign(state.settings, partial); persist(); },
+    putAgenda() {},
+    deleteAgenda() {},
     async savePushSub() { throw new Error('ローカルモードでは通知を使えません'); },
   };
 }
